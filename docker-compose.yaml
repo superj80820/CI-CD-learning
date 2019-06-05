@@ -1,0 +1,42 @@
+version: '2'
+
+services:
+  drone-server:
+    image: drone/drone:latest
+    ports:
+      - 80:8000
+      - 9000:9000
+    volumes:
+      - ./:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+    environment:
+      - DRONE_SERVER_HOST=${DRONE_SERVER_HOST}
+      - DRONE_SERVER_PROTO=${DRONE_SERVER_PROTO}
+      - DRONE_TLS_AUTOCERT=false
+      - DRONE_RUNNER_CAPACITY=3
+      # GitHub Config
+      - DRONE_GITHUB_SERVER=https://github.com
+      - DRONE_GITHUB_CLIENT_ID=${DRONE_GITHUB_CLIENT_ID}
+      - DRONE_GITHUB_CLIENT_SECRET=${DRONE_GITHUB_CLIENT_SECRET}
+      - DRONE_LOGS_PRETTY=true
+      - DRONE_LOGS_COLOR=true
+    networks:
+      - web
+  serveo:
+    image: node:latest
+    volumes: 
+      - $PWD:/app
+    working_dir: /app
+    environment:
+      - SUBDOMAIN=yorklindrone
+      - CONTAINER=drone-server
+      - PORT=80
+    networks:
+      - web
+    command:
+      - bash
+      - script/serveo.sh
+networks:
+  web:
+    external: true
